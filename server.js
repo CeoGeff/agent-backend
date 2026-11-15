@@ -30,12 +30,16 @@ let paidPhones = {};
 let gameState = { status: "closed", sessionId: "SESSION-1", openedAt: null, totalCollected: 0, totalPlayers: 0 };
 let plays = {};
 
+// FIX: 079... -> 25479..., +254... -> 254..., 254... stays 254...
 function cleanPhone(p) {
   p = (p || "").toString().replace(/\s/g, "");
   if (p.startsWith("+")) p = p.slice(1);
   if (p.startsWith("0")) p = "254" + p.slice(1);
   if (p.startsWith("7")) p = "254" + p;
   return p;
+}
+function isValidPhone(p) {
+  return /^2547\d{8}$/.test(p);
 }
 
 async function getToken(key = KEY, secret = SECRET) {
@@ -77,10 +81,27 @@ app.post('/api/game-reset', (req, res) => {
 app.post('/api/stk-push', async (req, res) => {
   try {
     let { phone, name } = req.body || {};
-    if (!phone) return res.json({ ResponseCode: "1", ResponseDescription: "Phone required" });
+    if (!phone) return res.status(400).json({ ResponseCode: "1", ResponseDescription: "Phone required", error: "Phone required" });
+
     phone = cleanPhone(phone);
+
+    // FIX: Show real reason instead of blank 400
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({
+        ResponseCode: "1",
+        ResponseDescription: "Invalid phone. Use 0712345678 or 254712345678",
+        error: "Invalid phone. Use 0712345678 or 254712345678",
+        got: phone
+      });
+    }
+
     if ((plays[phone] || 0) >= 2) return res.json({ ResponseCode: "1", ResponseDescription: "You have already played twice for this game. Wait for next game 11AM / 8PM." });
     if (gameState.status !== "open") return res.json({ ResponseCode: "1", ResponseDescription: "Game is CLOSED. Wait for Admin to open 11AM / 8PM game." });
+
+    if (!KEY || !SECRET || !PASSKEY) {
+      return res.status(500).json({ ResponseCode: "1", ResponseDescription: "Server missing Daraja keys. Check Render Env Vars.", error: "Server missing Daraja keys" });
+    }
+
     const token = await getToken();
     const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
     const timestamp = now.toISOString().replace(/[-:T.]/g, '').slice(0, 14);
@@ -90,12 +111,22 @@ app.post('/api/stk-push', async (req, res) => {
       TransactionType: TRANSACTION_TYPE, Amount: 20, PartyA: phone, PartyB: SHORTCODE,
       PhoneNumber: phone, CallBackURL: CALLBACK_URL, AccountReference: "TOURNAMENT", TransactionDesc: "Agent Spot The Fake Entry"
     }, { headers: { Authorization: `Bearer ${token}` } });
+
+    // Only count play AFTER Daraja accepts STK
     paidPhones[phone] = { paid: false, checkoutId: resp.data.CheckoutRequestID, name };
     plays[phone] = (plays[phone] || 0) + 1;
     res.json({ ...resp.data, playCount: plays[phone] });
   } catch (e) {
     const errData = e.response ? e.response.data : null;
-    res.json({ ResponseCode: "1", ResponseDescription: (errData && (errData.errorMessage || errData.ResponseDescription)) || e.message || "STK Failed" });
+    const msg = (errData && (errData.errorMessage || errData.ResponseDescription || errData.error_description)) || e.message || "STK Failed";
+    console.log("STK ERROR:", e.response?.status, JSON.stringify(errData), e.message);
+    // Return Daraja's real status + message so frontend can show it
+    res.status(e.response?.status || 500).json({
+      ResponseCode: "1",
+      ResponseDescription: msg,
+      error: msg,
+      daraja: errData || null
+    });
   }
 });
 
@@ -103,7 +134,8 @@ app.post('/api/callback', (req, res) => {
   try {
     const cb = req.body.Body.stkCallback;
     if (cb.ResultCode === 0) {
-      const phone = cb.CallbackMetadata.Item.find(i => i.Name === 'PhoneNumber').Value.toString();
+      const rawPhone = cb.CallbackMetadata.Item.find(i => i.Name === 'PhoneNumber').Value.toString();
+      const phone = cleanPhone(rawPhone);
       if (!paidPhones[phone] || !paidPhones[phone].paid) {
         paidPhones[phone] = { paid: true, ticket: cb.CheckoutRequestID, name: paidPhones[phone]?.name };
         gameState.totalCollected += 20;
@@ -134,6 +166,7 @@ app.post('/api/pay-winners', async (req, res) => {
     let results = [];
     for (let w of winners) {
       let phone = cleanPhone(w.phone);
+      if (!isValidPhone(phone)) { results.push({ name: w.name, phone, amount: w.amount, res: { error: "Invalid phone" } }); continue; }
       const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
       const timestamp = now.toISOString().replace(/[-:T.]/g, '').slice(0, 14);
       const sec = Buffer.from(`${B2C_SHORTCODE}${B2C_PASSWORD}${timestamp}`).toString('base64');
