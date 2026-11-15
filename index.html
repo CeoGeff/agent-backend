@@ -43,7 +43,7 @@ input{width:100%;padding:13px;border-radius:8px;border:1px solid #CBD5E1;font-si
 <button class="btn btn-green" onclick="playFree()">PLAY FREE | Practice | 10 Questions</button><button class="btn btn-gold" onclick="showTournament()">ENTER TOURNAMENT | KSh 20 | 20 Questions</button><a href="leaderboard.html" style="text-decoration:none"><button class="btn btn-outline">VIEW LEADERBOARD | LIVE</button></a><button class="btn btn-dark btn-small" onclick="howTo()">How To Play</button>
 <div class="how"><h3 style="font-size:14px;margin-bottom:8px">Very Easy Mode:</h3><p style="font-size:13px;color:#475569;line-height:1.6">1. Answer all Quizzes - no guessing<br>2. Trick is in 1 detail.<br>3. 8 seconds PER Quiz.<br>4. Prizes: 1st KSh 250, 2nd KSh 150, 3rd KSh 100</p></div><p class="footer"><b>Made in KENYA</b> | Let's Earn Together | 1st 250 | 2nd 150 | 3rd 100</p></div>
 <div id="tournamentPay" style="display:none"><div class="topbar"><div class="logo"><div class="logo-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="3.2" stroke="white" stroke-width="2"/><path d="M13 13L17 17" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></div><div class="logo-text"><small>AGENT</small><span>TOURNAMENT</span></div></div><button onclick="showMenu()" style="background:#334155;color:white;border:0;padding:8px 12px;border-radius:8px;font-weight:700">Close</button></div><div class="payCard"><h2>Enter Tournament</h2><div class="tillBig"><div style="font-size:12px;font-weight:700;color:#64748B">PAY 20KES</div><b>TO JOIN THE TOURNAMENT</b><div style="font-size:13px;font-weight:700">Amount: KSh 20 | Win 250 / 150 / 100</div></div><label>Your Name</label><input id="playerName" placeholder="e.g. John James">
-<label>Your M-Pesa Phone</label><input id="playerPhone" placeholder="e.g. 0712345678" type="tel" maxlength="10">
+<label>Your M-Pesa Phone</label><input id="playerPhone" placeholder="e.g. 0712345678" type="tel" maxlength="12">
 <div style="font-size:12px;color:#64748B;margin-top:-4px">You will get STK Push on this number. Enter your M-PESA PIN to pay KSh 20.</div>
 <button class="btn btn-green" onclick="payWithMpesa()">PAY KSh 20 WITH M-PESA</button><p id="payError" style="color:#DC2626;font-weight:700;font-size:13px;margin-top:8px"></p><div id="statusArea"></div><button class="btn btn-gold" onclick="checkMyStatus()" style="display:none" id="checkStatusBtn">CHECK MY STATUS</button><button class="btn btn-green" onclick="startTournamentIfApproved()" style="display:none" id="playNowBtn">PLAY TOURNAMENT NOW</button></div></div>
 <div id="game" style="display:none"><div class="topbar"><div class="logo"><div class="logo-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="3.2" stroke="white" stroke-width="2"/><path d="M13 13L17 17" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></div><span id="levelTitle">Game</span></div><div class="pill"><span id="cust">1 / 20</span></div></div><div class="game-top"><div><small>FLOAT</small><b id="float" style="color:#15803D"></b></div><div><small>TRUST</small><b id="trust"></b></div><div><small>COMBO</small><b id="combo" style="color:#B45309">0</b></div></div><div class="progress"><i id="progBar" style="width:100%"></i></div><div class="timerBox"><div><b id="timer">8s</b></div><div style="text-align:right"><span id="pressure" style="color:#DC2626;font-weight:800"></span><br><span style="font-size:12px;color:#64748B">8 seconds</span></div></div><div class="qCard" style="margin-top:12px"><span class="qNum" id="qNum">QUESTION 1 / 20</span><span class="hard-tag" id="hardTag">VERY HARD</span><p class="qText" id="qText"></p><div class="qMsg" id="qMsg" style="display:none"></div><div id="options"></div></div><p id="result" style="font-weight:700;text-align:center;margin-top:10px"></p><button class="btn btn-dark" onclick="showMenu()">Menu</button></div>
@@ -151,59 +151,49 @@ function howTo(){alert("VERY EASY QUESTIONS:\n- 8 seconds Per Quiz\n- All answer
    const BACKEND_URL = window.location.origin;
 let autoPollInt = null;
 function stopAutoPoll(){ if(autoPollInt){ clearInterval(autoPollInt); autoPollInt=null; } }
+function normalizePhone(p){
+  p = String(p||"").replace(/\s/g,"").replace(/^\+/,"");
+  if(p.startsWith("0")) p = "254" + p.slice(1);
+  return p;
+}
 async function payWithMpesa(){
   let name = document.getElementById('playerName').value.trim();
-  let phone = document.getElementById('playerPhone').value.trim();
+  let rawPhone = document.getElementById('playerPhone').value.trim();
   let err = document.getElementById('payError');
   err.innerText = "";
   if(name.length < 2){ err.innerText = "Enter your name"; return; }
-  if(!/^0?7\d{8}$/.test(phone)){ err.innerText = "Enter valid number e.g. 0712345678"; return; }
+  if(!/^(0?7\d{8}|2547\d{8})$/.test(rawPhone)){ err.innerText = "Enter valid number e.g. 0712345678"; return; }
+  let phone = normalizePhone(rawPhone);
   playerName = name;
   localStorage.setItem('agent_my_name', name);
   localStorage.setItem('agent_my_phone', phone);
-
   document.getElementById('statusArea').innerHTML = `<div class="statusBox waiting"><span class="spinner"></span> Waking server... please wait 10s...</div>`;
-
-  // Wake Render first - try game-state 2 times
   let gs = null;
   for(let i=0;i<3;i++){
-    try{ gs = await fetch(BACKEND_URL + '/api/game-state').then(r=>r.json()); break; }
+    try{ let r = await fetch(BACKEND_URL + '/api/game-state'); gs = await r.json(); break; }
     catch(e){ await new Promise(r=>setTimeout(r,5000)); }
   }
   if(!gs || gs.status !== "open"){ err.innerText = "Game is CLOSED. Admin will open at 11AM / 8PM."; document.getElementById('statusArea').innerHTML=""; return; }
-
   document.getElementById('statusArea').innerHTML = `<div class="statusBox waiting"><span class="spinner"></span> Sending STK Push to ${phone}...<br>Check your phone and enter M-PESA PIN</div>`;
   try{
     let res = await fetch(BACKEND_URL + '/api/stk-push', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ phone, name }) });
-    let data = await res.json();
+    let data = await res.json().catch(()=>({}));
+    if(!res.ok){
+      document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">${data.error || data.ResponseDescription || data.message || ('Server error: ' + res.status)}</div>`;
+      return;
+    }
     if(data.ResponseCode == "0"){
-      document.getElementById('statusArea').innerHTML = `<div class="statusBox approvedBox">STK SENT! PIN entered = Game Starting... Payment confirming in background. Good Luck!</div>`;
+      document.getElementById('statusArea').innerHTML = `<div class="statusBox approvedBox">STK SENT! Check phone for PIN. Payment confirming...</div>`;
       currentTicket = data.CheckoutRequestID || "STK-" + Date.now();
       startAutoPoll(phone);
       setTimeout(()=>{ isTournament = true; startLevel(4); }, 1200);
     } else {
-      document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">${data.ResponseDescription || 'Try again'}</div>`;
+      document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">${data.ResponseDescription || data.error || 'Try again'}</div>`;
     }
   }catch(e){
-    // Retry once after wake-up
-    await new Promise(r=>setTimeout(r,6000));
-    try{
-      let res2 = await fetch(BACKEND_URL + '/api/stk-push', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ phone, name }) });
-      let data2 = await res2.json();
-      if(data2.ResponseCode == "0"){
-        document.getElementById('statusArea').innerHTML = `<div class="statusBox approvedBox">STK SENT! Check phone for PIN.</div>`;
-        currentTicket = data2.CheckoutRequestID || "STK-" + Date.now();
-        startAutoPoll(phone);
-        setTimeout(()=>{ isTournament = true; startLevel(4); }, 1200);
-      } else {
-        document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">${data2.ResponseDescription || 'Try again'}</div>`;
-      }
-    }catch(e2){
-      document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">Still waking up. Wait 10s and tap PAY again. Server: ${e2.message}</div>`;
-    }
+    document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">Network error: ${e.message}. Wait 10s and tap PAY again.</div>`;
   }
 }
-
 function startAutoPoll(phone){
   stopAutoPoll();
   autoPollInt = setInterval(()=> checkPaymentStatus(phone), 3000);
