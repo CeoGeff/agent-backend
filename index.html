@@ -40,9 +40,9 @@ input{width:100%;padding:14px;border-radius:12px;border:1px solid #E5E7EB;font-s
 <div class="container">
 <div id="menu">
 <div class="topbar"><div class="logo"><div class="logo-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L20 5.5V11C20 16.5 16.5 21 12 22C7.5 21 4 16.5 4 11V5.5L12 2Z" fill="#06230F" opacity="0.15"/><path d="M12 2L20 5.5V11C20 16.5 16.5 21 12 22C7.5 21 4 16.5 4 11V5.5L12 2Z" stroke="#06230F" stroke-width="1.8"/><circle cx="10.5" cy="10.5" r="3.2" stroke="#06230F" stroke-width="2"/><path d="M13 13L17 17" stroke="#06230F" stroke-width="2" stroke-linecap="round"/></svg></div><div class="logo-text"><small>AGENT • KENYA</small><span>SPOT THE FAKE</span></div></div><div class="pill">Lives <b id="livesDisplay">3</b> • Best <b id="bestScore">KSh 0</b></div></div>
-<div class="hero"><span class="badge-live"><span class="dot"></span> VERY EASY • 8 SECONDS • QUIZES</span><h1>SPOT THE FAKE<span>WIN REAL MONEY</span></h1><p class="sub">Short questions. REAL CASH✔.<br>Answer all questions correctly.<br>You must actually know it. 8 seconds.</p><div class="tourney"><div style="font-size:12px;font-weight:800">TODAY'S TOURNAMENT • 8PM • VERY EASY</div><div class="t-prize">Win KSh 250 • 150 • 100</div><div style="font-size:12.5px">Entry: KSh 20 • 20 Questions • 8 seconds each • No Repeats</div><span class="till">Till 3056305</span></div><div class="stats"><div class="stat"><small>LIVES</small><b id="livesDisplay2">3</b></div><div class="stat"><small>BEST</small><b id="bestScore2">KSh 0</b></div><div class="stat"><small>PRIZE</small><b>KSh 250</b></div></div></div>
+<div class="hero"><span class="badge-live"><span class="dot"></span> VERY EASY • 8 SECONDS/QUIZ • LET'S ROLL</span><h1>SPOT THE FAKE<span>WIN REAL MONEY</span></h1><p class="sub">Short questions. REAL CASH✔.<br>Answer all questions correctly.<br>You must actually know it. 8 seconds.</p><div class="tourney"><div style="font-size:12px;font-weight:800">TODAY'S TOURNAMENT • 8PM • VERY EASY</div><div class="t-prize">Win KSh 250 • 150 • 100</div><div style="font-size:12.5px">Entry: KSh 20 • 20 Questions • 8 seconds each • No Repeats • Enter Tournament</div><span class="till">GOODLUCK!</span></div><div class="stats"><div class="stat"><small>LIVES</small><b id="livesDisplay2">3</b></div><div class="stat"><small>BEST</small><b id="bestScore2">KSh 0</b></div><div class="stat"><small>PRIZE</small><b>KSh 250</b></div></div></div>
 <button class="btn btn-green" onclick="playFree()">PLAY FREE • Practice • 10 Questions</button><button class="btn btn-gold" onclick="showTournament()">ENTER TOURNAMENT • KSh 20 • 20 Questions</button><a href="leaderboard.html" style="text-decoration:none"><button class="btn btn-outline">VIEW LEADERBOARD • LIVE</button></a><button class="btn btn-dark btn-small" onclick="howTo()">How To Play</button>
-<div class="how"><h3 style="font-size:14px;margin-bottom:8px">Very Easy Mode:</h3><p style="font-size:13px;color:#D1D5DB;line-height:1.6">1. Answer all Quizes - no guessing<br>2. Trick is in 1 detail.<br>3. 8 seconds PER Quiz.<br>4. Prizes: 1st KSh 250, 2nd KSh 150, 3rd KSh 100</p></div><p class="footer"><b>Till 3056305</b> • Made in Kisii, Kenya • 1st 250 • 2nd 150 • 3rd 100</p></div>
+<div class="how"><h3 style="font-size:14px;margin-bottom:8px">Very Easy Mode:</h3><p style="font-size:13px;color:#D1D5DB;line-height:1.6">1. Answer all Quizes - no guessing<br>2. Trick is in 1 detail.<br>3. 8 seconds PER Quiz.<br>4. Prizes: 1st KSh 250, 2nd KSh 150, 3rd KSh 100</p></div><p class="footer"><b>Made in KENYA</b> • Let's Earn Together • 1st 250 • 2nd 150 • 3rd 100</p></div>
 <div id="tournamentPay" style="display:none"><div class="topbar"><div class="logo"><div class="logo-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="3.2" stroke="#06230F" stroke-width="2"/><path d="M13 13L17 17" stroke="#06230F" stroke-width="2" stroke-linecap="round"/></svg></div><div class="logo-text"><small>AGENT</small><span>TOURNAMENT</span></div></div><button onclick="showMenu()" style="background:#1F2937;color:white;border:0;padding:8px 12px;border-radius:999px;font-weight:700">Close</button></div><div class="payCard"><h2>Enter Tournament</h2><div class="tillBig"><div style="font-size:12px;font-weight:800;color:#6B7280">PAY 20KES</div><b>TO JOIN THE TOURNAMENT</b><div style="font-size:13px;font-weight:700">Amount: KSh 20 • Win 250 / 150 / 100</div></div><label>YOUR NAME</label><input id="playerName" placeholder="e.g. John James">
 <label>YOUR M-PESA PHONE</label><input id="playerPhone" placeholder="e.g. 0712345678" type="tel" maxlength="10">
 <div style="font-size:12px;color:#6B7280;margin-top:-4px">You will get STK Push on this number. Enter your M-PESA PIN to pay KSh 20.</div>
@@ -127,10 +127,17 @@ function generateOneQuestion(forcedType){
   else { q={q:`Same code ${code} used for two KSh ${amt.toLocaleString()} payments.`, msg:`Same code twice`, correct:`FAKE - Code cannot repeat`, wrongs:[`REAL - Codes can repeat`,`FAKE - Amount is wrong`,`REAL - Both are real`], explain:`One code = one payment.`}; }
   return {q:q.q, msg:q.msg||"", correctText:q.correct, wrongs:q.wrongs, explain:q.explain};
 }
+
+// Load admin custom questions from Firebase
+async function loadCustomQs(){ try{ let snap=await window.fb.get(window.fb.ref(window.db,'customQuestions')); if(snap.exists()){ let arr=Object.values(snap.val()); localStorage.setItem('agent_custom_qs', JSON.stringify(arr)); return arr; } }catch(e){} return []; }
+
+
 function getQuestions(count){
   let allTypes = shuffleCrypto(Array.from({length:50},(_,i)=>i));
   let chosenTypes = allTypes.slice(0, count);
-  let raw = chosenTypes.map(t=>generateOneQuestion(t));
+let raw = chosenTypes.map(t=>generateOneQuestion(t));
+let custom = JSON.parse(localStorage.getItem('agent_custom_qs')||'[]');
+if(custom.length>0){ let customRaw = custom.map(c=>({q:c.q, msg:c.q, correctText:c.correctText, wrongs:c.wrongs, explain:c.explain||""})); raw = [...customRaw.slice(0,5), ...raw].slice(0,count); }
   let positions=[]; let base=Math.floor(count/4); let extra=count%4;
   for(let p=0;p<4;p++){ let c=base + (p<extra?1:0); for(let i=0;i<c;i++) positions.push(p); }
   positions = shuffleCrypto(positions);
@@ -149,7 +156,7 @@ function showTournament(){hideAll();document.getElementById('tournamentPay').sty
 function howTo(){alert("VERY EASY QUESTIONS:\n- 8 seconds Per Quiz\n- All answers must be correct to Earn\n- Trick in 1 detail\n- Prizes: 1st 250, 2nd 150, 3rd 100");}
 
 // --- NEW: DARAJA STK PUSH ---
-   const BACKEND_URL = "";
+   const BACKEND_URL = "https://agent-backend-nio1.onrender.com";
 let autoPollInt = null;
 function stopAutoPoll(){ if(autoPollInt){ clearInterval(autoPollInt); autoPollInt=null; } }
 
@@ -163,20 +170,30 @@ async function payWithMpesa(){
   playerName = name;
   localStorage.setItem('agent_my_name', name);
   localStorage.setItem('agent_my_phone', phone);
+  // Check game is OPEN - Admin opens at 11AM / 8PM
+  try{
+    let gs = await fetch(BACKEND_URL + '/api/game-state').then(r=>r.json());
+    if(gs.status !== "open"){ err.innerText = "Game is CLOSED. Admin will open at 11AM / 8PM."; return; }
+  }catch(e){}
   document.getElementById('statusArea').innerHTML = `<div class="statusBox waiting"><span class="spinner"></span> Sending STK Push to ${phone}...<br>Check your phone and enter M-PESA PIN</div>`;
   try{
     let res = await fetch(BACKEND_URL + '/api/stk-push', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ phone, name }) });
     let data = await res.json();
     if(data.ResponseCode == "0"){
-      document.getElementById('statusArea').innerHTML = `<div class="statusBox waiting"><span class="spinner"></span> STK SENT! Enter PIN on your phone...<br>Waiting for payment confirmation...</div>`;
+      // INSTANT START - Don't wait for callback
+      document.getElementById('statusArea').innerHTML = `<div class="statusBox approvedBox">STK SENT! PIN entered = Game Starting... Payment confirming in background. Good Luck!</div>`;
+      currentTicket = data.CheckoutRequestID || "STK-" + Date.now();
       startAutoPoll(phone);
+      setTimeout(()=>{ isTournament = true; startLevel(4); }, 1200);
     } else {
-      document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">Failed: ${data.ResponseDescription || 'Try again'}</div>`;
+      document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">${data.ResponseDescription || 'Try again'}</div>`;
     }
   }catch(e){
     document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">Backend not connected. Check BACKEND_URL.</div>`;
   }
 }
+  
+
 function startAutoPoll(phone){
   stopAutoPoll();
   autoPollInt = setInterval(()=> checkPaymentStatus(phone), 3000);
@@ -202,11 +219,13 @@ async function startTournamentIfApproved(){
   alert("Tap CHECK MY STATUS first");
 }
 function playFree(){if(lives<=0){alert("No lives! Come back tomorrow.");return;}isTournament=false;startLevel(1);}
-function startLevel(l){stopAutoPoll();level=l;currentQuestions=getQuestions(l==4?20:10);float=l==4?5000:10000;trust=100;index=0;combo=0;correctCount=0;hideAll();document.getElementById('game').style.display='block';document.getElementById('levelTitle').innerText=l==4?"TOURNAMENT • "+currentTicket:"FREE PRACTICE • 10 Qs";show();}
+async function startLevel(l){stopAutoPoll();level=l;await loadCustomQs();currentQuestions=getQuestions(l==4?20:10);float=l==4?5000:10000;trust=100;index=0;combo=0;correctCount=0;hideAll();document.getElementById('game').style.display='block';document.getElementById('levelTitle').innerText=l==4?"TOURNAMENT • "+currentTicket:"FREE PRACTICE • 10 Qs";show();}
 function show(){if(index>=currentQuestions.length){winLevel();return;}if(float<=0||trust<=0){loseLevel();return;}let q=currentQuestions[index];answered=false;document.getElementById('qNum').innerText="QUESTION "+(index+1)+" / "+currentQuestions.length;document.getElementById('hardTag').innerText="VERY HARD • 8s";document.getElementById('qText').innerText=q.q;let msgEl=document.getElementById('qMsg');if(q.msg){msgEl.style.display='block';msgEl.innerText=q.msg;}else{msgEl.style.display='none';}document.getElementById('cust').innerText=(index+1)+" / "+currentQuestions.length;document.getElementById('progBar').style.width=((index/currentQuestions.length)*100)+"%";document.getElementById('pressure').innerText="8 SECONDS";document.getElementById('float').innerText="KSh "+float.toLocaleString();document.getElementById('trust').innerText=trust+"%";let letters=["A","B","C","D"];let h="";q.opts.forEach((opt,i)=>{h+=`<button class="opt" onclick="answer(${i})"><b>${letters[i]}</b><span>${opt}</span></button>`;});document.getElementById('options').innerHTML=h;document.getElementById('result').innerText="";timeLeft=8;document.getElementById('timer').innerText=timeLeft+"s";clearInterval(timerInt);timerInt=setInterval(()=>{timeLeft--;document.getElementById('timer').innerText=timeLeft+"s";if(timeLeft<=0){clearInterval(timerInt);if(!answered){trust-=7;combo=0;updateHUD();document.getElementById('result').innerText="Too slow! -7% Trust | Correct was "+letters[q.correct];setTimeout(()=>{index++;show();},1200);}}},1000);}
 function updateHUD(){document.getElementById('float').innerText="KSh "+float.toLocaleString();document.getElementById('trust').innerText=trust+"%";document.getElementById('combo').innerText=combo;}
 function answer(choice){if(answered)return;answered=true;clearInterval(timerInt);let q=currentQuestions[index];let letters=["A","B","C","D"];let btns=document.querySelectorAll('.opt');btns.forEach(b=>b.disabled=true);if(choice===q.correct){let bonus=combo>=5?2:1;float+=100*bonus;trust=Math.min(100,trust+2);combo++;correctCount++;btns[choice].classList.add('correct');document.getElementById('result').innerText="Correct! +KSh "+(100*bonus)+" | "+q.explain;if(combo==5)document.getElementById('result').innerText+=" COMBO x2!";}else{trust-=15;combo=0;float-=50;btns[choice].classList.add('wrong');btns[q.correct].classList.add('correct');document.getElementById('result').innerText="Wrong! -15% Trust | Correct was "+letters[q.correct]+" | "+q.explain;}updateHUD();index++;setTimeout(show,1800);}
-async function winLevel(){hideAll();document.getElementById('gameover').style.display='block';document.getElementById('overTitle').innerText=isTournament?"TOURNAMENT FINISHED!":"PRACTICE DONE!";document.getElementById('overEmoji').innerText=isTournament?"TOURNAMENT COMPLETE":"PRACTICE COMPLETE";document.getElementById('overText').innerText="Player: "+playerName+" | Ticket: "+currentTicket+" | Correct: "+correctCount+" / "+currentQuestions.length+" | Float: KSh "+float+" | Trust: "+trust+"%";document.getElementById('finalScore').innerText="Final Score: KSh "+float.toLocaleString();document.getElementById('winBox').style.display=(isTournament&&float>=8000)?"block":"none";if(window.firebaseReady&&isTournament){await window.fb.push(window.fb.ref(window.db,'leaderboard'),{name:playerName,score:float,ticket:currentTicket,date:new Date().toLocaleString()});}let best=parseInt(localStorage.getItem('agent_best')||'0');if(float>best)localStorage.setItem('agent_best',float);if(!isTournament){lives--;localStorage.setItem('agent_lives',lives);}syncStats();}
+async function winLevel(){hideAll();document.getElementById('gameover').style.display='block';document.getElementById('overTitle').innerText=isTournament?"TOURNAMENT FINISHED!":"PRACTICE DONE!";document.getElementById('overEmoji').innerText=isTournament?"TOURNAMENT COMPLETE":"PRACTICE COMPLETE";document.getElementById('overText').innerText="Player: "+playerName+" | Ticket: "+currentTicket+" | Correct: "+correctCount+" / "+currentQuestions.length+" | Float: KSh "+float+" | Trust: "+trust+"%";document.getElementById('finalScore').innerText="Final Score: KSh "+float.toLocaleString();document.getElementById('winBox').style.display=(isTournament&&float>=8000)?"block":"none";let myPhone = localStorage.getItem('agent_my_phone')||'';
+let customQs = JSON.parse(localStorage.getItem('agent_custom_qs')||'[]');
+if(window.firebaseReady&&isTournament){ await window.fb.push(window.fb.ref(window.db,'leaderboard'),{name:playerName,score:float,ticket:currentTicket,phone:myPhone,date:new Date().toLocaleString(),plays:1}); }let best=parseInt(localStorage.getItem('agent_best')||'0');if(float>best)localStorage.setItem('agent_best',float);if(!isTournament){lives--;localStorage.setItem('agent_lives',lives);}syncStats();}
 function loseLevel(){hideAll();document.getElementById('gameover').style.display='block';document.getElementById('overTitle').innerText="GAME OVER";document.getElementById('overEmoji').innerText="GAME OVER";document.getElementById('overText').innerText="Player: "+playerName+" | Correct: "+correctCount+" / "+currentQuestions.length+" | Float: KSh "+float+" | Trust: "+trust+"%";document.getElementById('finalScore').innerText="Try Again - Sharp agents never give up!";document.getElementById('winBox').style.display="none";if(!isTournament){lives--;localStorage.setItem('agent_lives',lives);}syncStats();}
 function shareScore(){let text="I played AGENT: Spot The Fake VERY HARD! I got "+correctCount+" / "+currentQuestions.length+" correct! Score KSh "+float+"! Can you beat me? Entry KSh 20 to Till 3056305. Win 250 / 150 / 100. Play here: ";window.open("https://wa.me/?text="+encodeURIComponent(text+window.location.href),"_blank");}
 </script>
