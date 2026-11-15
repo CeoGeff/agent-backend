@@ -1,98 +1,89 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin - AGENT Spot The Fake</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>AGENT Admin - Spot The Fake</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:#070B14;color:white;padding:14px;min-height:100vh}
-.container{max-width:520px;margin:auto;position:relative;z-index:1}
-.topbar{display:flex;align-items:center;gap:12px;padding:8px 2px 14px}
-.logo-badge{width:42px;height:42px;background:linear-gradient(135deg,#00C853,#00E676);border-radius:12px;display:grid;place-items:center;flex-shrink:0}
-.logo-text{line-height:1}.logo-text small{display:block;font-size:9px;letter-spacing:2.5px;color:#00E676;font-weight:800}.logo-text span{font-size:17px;font-weight:900}
-.live-badge{margin-left:auto;background:rgba(0,200,83,.15);color:#00E676;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:6px}.dot{width:7px;height:7px;background:#00E676;border-radius:50%}
-.card{background:white;color:#111;border-radius:18px;padding:18px;margin-top:12px}.card-dark{background:#111827;color:white;border:1px solid rgba(255,255,255,.08)}
-input{width:100%;padding:14px;border-radius:12px;margin:8px 0;border:1px solid #E5E7EB;background:#F9FAFB;font-size:15px}label{font-size:12px;font-weight:800;color:#374151}
-button{border:0;border-radius:12px;padding:12px;font-weight:800;cursor:pointer}.btn-green{background:linear-gradient(180deg,#00E676,#00A651);color:#06230F;width:100%;padding:15px;font-size:15px}
-.row{border:2px solid #F59E0B;background:#FFFBEB;border-radius:14px;padding:14px;margin:10px 0;color:#111}.row.approved{border-color:#00C853;background:#F0FDF4}.row-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.badge{display:inline-block;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:800}.badge-waiting{background:#FEF3C7;color:#92400E;border:1px solid #F59E0B}.badge-ready{background:#DCFCE7;color:#166534;border:1px solid #00C853}.badge-used{background:#E5E7EB;color:#374151;border:1px solid #9CA3AF}
-.btn-approve{background:#00C853;color:white;margin-top:10px;padding:12px 16px}.btn-reject{background:#DC2626;color:white;margin-top:10px;padding:12px 16px;margin-left:6px}.btn-clear{background:#334155;color:white;width:100%;margin-top:12px;padding:14px}
-.section-title{font-size:15px;font-weight:800;margin-top:20px}.count{font-size:12px;background:#111827;color:white;padding:3px 8px;border-radius:999px}.meta{font-size:12.5px;color:#6B7280;margin-top:4px}.prize{font-weight:800;color:#15803D}.empty{color:#9CA3AF;font-size:13px;padding:10px 0}
-</style>
-</head>
-<body>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background:#060B18;color:#0F172A;padding:0}
+.topbar{background:#0F172A;color:white;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.topbar b{letter-spacing:.3px}.topbar small{display:block;color:#94A3B8;font-size:11px;font-weight:500}
+.live{background:#00C853;color:white;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:800}
+.container{max-width:620px;margin:auto;padding:16px}
+.card{background:white;border-radius:20px;padding:20px;margin-top:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);border:1px solid #E2E8F0}
+.card-dark{background:#0F172A;color:white;border:0}
+h2{font-size:19px}h3{font-size:15px;margin-bottom:6px}.muted{font-size:12.5px;color:#64748B;line-height:1.5}
+input,textarea{width:100%;padding:13px 14px;border-radius:12px;margin:7px 0 12px;border:1.5px solid #E2E8F0;background:#F8FAFC;font-size:14px;font-family:inherit;outline:none}
+input:focus{border-color:#00C853;background:white}
+label{font-size:12px;font-weight:700;letter-spacing:.4px;color:#334155;text-transform:uppercase}
+button{border:0;border-radius:12px;padding:13px;font-weight:800;cursor:pointer;font-family:inherit}
+.btn-green{background:linear-gradient(180deg,#00E676,#00A651);color:#06230F;width:100%;padding:15px}
+.btn-gold{background:linear-gradient(180deg,#FFD54F,#FFB300);color:#231800;width:100%;padding:16px;font-size:15px;box-shadow:0 4px 14px rgba(255,179,0,.35)}
+.btn-dark{background:#334155;color:white;width:100%;padding:14px}
+.flex{display:flex;gap:10px}.flex button{flex:1}
+.row{border-radius:16px;padding:14px;margin:10px 0;color:#0F172A;background:#FFFBEB;border:1.5px solid #FDE68A}
+.row.top1{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border-color:#F59E0B;border-width:2px}
+.row.top2{background:linear-gradient(135deg,#F8FAFC,#E2E8F0);border-color:#94A3B8;border-width:2px}
+.row.top3{background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border-color:#EA580C;border-width:2px}
+.badge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;background:#0F172A;color:white}
+.count{background:#0F172A;color:white;padding:3px 9px;border-radius:999px;font-size:11px}
+.meta{font-size:12.5px;color:#64748B;margin-top:4px}
+.section-title{font-size:15px;font-weight:800;margin-top:24px;display:flex;align-items:center;gap:8px}
+.note{background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;padding:10px 12px;border-radius:10px;font-size:12.5px;margin-top:10px;line-height:1.5}
+</style></head><body>
+<div class="topbar"><div><b>AGENT • ADMIN PANEL</b><small>Spot The Fake • Till 3056305 • 11AM & 8PM</small></div><span class="live">● LIVE</span></div>
 <div class="container">
-<div class="topbar"><div class="logo-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="3.2" stroke="#06230F" stroke-width="2"/><path d="M13 13L17 17" stroke="#06230F" stroke-width="2" stroke-linecap="round"/></svg></div><div class="logo-text"><small>AGENT • KENYA</small><span>ADMIN PANEL</span></div><div class="live-badge"><span class="dot"></span> LIVE</div></div>
-<div id="login" class="card"><h2>Admin Login</h2><p style="font-size:13px;color:#6B7280;margin-top:4px">Enter PIN to manage payments. One code = One game.</p><label style="margin-top:12px;display:block">ADMIN PIN</label><input id="pin" type="password" placeholder="Enter PIN"><button class="btn-green" onclick="unlock()">Unlock Admin</button><p id="pinErr" style="color:#DC2626;font-weight:700;font-size:13px;margin-top:8px"></p></div>
+<div id="login" class="card"><h2>Admin Login</h2><p class="muted">Enter PIN to manage game, winners & questions.</p><input id="pin" type="password" placeholder="Enter Admin PIN"><button class="btn-green" onclick="unlock()">Unlock Admin Panel</button><p id="pinErr" style="color:#DC2626;font-weight:700;font-size:13px"></p></div>
 <div id="admin" style="display:none">
-<div class="card card-dark"><b id="stats" style="font-size:16px">Loading...</b><br><span style="font-size:12.5px;color:#9CA3AF">Check M-Pesa SMS for Till 3056305, then tap APPROVE. Reused codes are blocked automatically.</span></div>
-<div class="section-title">Waiting - Approve After Payment <span class="count" id="pendingCount">0</span></div><div id="pendingList"></div>
-<div class="section-title">Approved <span class="count" id="approvedCount">0</span></div><div id="approvedList"></div>
-<div class="section-title">Used Codes <span class="count" id="usedCount">0</span></div><div id="usedList"></div>
-<div class="section-title">Winners To Pay - LIVE <span class="count" id="winnerCount">0</span></div><div id="leaderList"></div>
-<button onclick="clearAll()" class="btn-clear">Clear All After Paying</button>
-<p style="text-align:center;color:#6B7280;font-size:11.5px;margin-top:12px">Till 3056305 • AGENT Spot The Fake</p>
-</div>
-</div>
+<div class="card card-dark"><b id="stats">Loading...</b><br><span style="font-size:12.5px;color:#94A3B8" id="totalBox"></span>
+<div class="flex" style="margin-top:14px"><button onclick="openGame()" style="background:#00C853;color:white">▶ OPEN GAME</button><button onclick="closeGame()" style="background:#DC2626;color:white">■ CLOSE GAME</button></div>
+<p style="font-size:11.5px;color:#94A3B8;margin-top:10px;line-height:1.5">Open = players can pay KSh 20 + play twice.<br>Close = no new plays. Reset clears for next 11AM / 8PM game.</p></div>
+
+<div class="section-title">🏆 Top 3 + All Active Players <span class="count" id="winnerCount">0</span></div>
+<div id="leaderList"></div>
+<button class="btn-gold" onclick="payAllTop3()">💰 PAY ALL TOP 3 IN ONE CLICK<br><span style="font-size:12px;font-weight:600">1st KSh 250 • 2nd KSh 150 • 3rd KSh 100 = KSh 500 Total</span></button>
+<p id="payResult" style="font-size:13px;margin-top:8px;white-space:pre-wrap"></p>
+
+<div class="section-title">❓ Add Question Yourself</div>
+<div class="card"><h3>Add New Question</h3><p class="muted">Type the correct answer below. In the game, the 4 choices will be <b>shuffled randomly</b> - correct answer will NOT always be first.</p>
+<label>Question</label><input id="qText" placeholder="e.g. SMS says Till 3056306, amount KSh 20...">
+<label> Correct Answer - Will be shuffled in game</label><input id="qCorrect" placeholder="FAKE - Wrong Till">
+<label>Wrong Option 1</label><input id="qW1" placeholder="REAL - Till is correct">
+<label>Wrong Option 2</label><input id="qW2" placeholder="FAKE - Amount wrong">
+<label>Wrong Option 3</label><input id="qW3" placeholder="FAKE - Code wrong">
+<label>Explanation - Shown after player answers</label><input id="qExplain" placeholder="One digit wrong = wrong Till">
+<button class="btn-green" onclick="addQuestion()">+ ADD QUESTION</button><p id="qMsg" style="font-size:13px"></p><div class="note">ℹ️ Shuffling: The game places the correct answer randomly in A / B / C / D - 5 times each in 20 questions. Players cannot guess by position.</div>
+<div id="customQs"></div></div>
+
+<div class="section-title">⏳ Waiting - Approve After Payment <span class="count" id="pendingCount">0</span></div><div id="pendingList"></div>
+<div class="section-title"> Approved <span class="count" id="approvedCount">0</span></div><div id="approvedList"></div>
+<button onclick="resetGame()" class="btn-dark">🔄 RESET AFTER PLAY ENDS (Clear All + Close Game)</button>
+<p style="text-align:center;color:#64748B;font-size:11.5px;margin-top:14px">AGENT Spot The Fake • Till 3056305 • 11AM & 8PM Daily</p>
+</div></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, push, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 const firebaseConfig = { apiKey: "AIzaSyCCE1lmG1u0mJk_iUkaG0vr_5RqoswBSNs", authDomain: "agent-spot-fake.firebaseapp.com", databaseURL: "https://agent-spot-fake-default-rtdb.firebaseio.com", projectId: "agent-spot-fake", storageBucket: "agent-spot-fake.firebasestorage.app", messagingSenderId: "422926632685", appId: "1:422926632685:web:588449ea7fa6fdada76ee4", measurementId: "G-2LPC3732XZ" };
 const app = initializeApp(firebaseConfig); const db = getDatabase(app);
-window.unlock = ()=>{
-  if(document.getElementById('pin').value==="9989#ooko"){
-    document.getElementById('login').style.display='none'; document.getElementById('admin').style.display='block';
-    onValue(ref(db,'pending'), snap=>{ renderPending(snap.exists()?Object.entries(snap.val()):[]) });
-    onValue(ref(db,'approved'), snap=>{ renderApproved(snap.exists()?Object.values(snap.val()):[]) });
-    onValue(ref(db,'usedCodes'), snap=>{ let list=snap.exists()?Object.values(snap.val()):[]; document.getElementById('usedCount').innerText=list.length; let html=""; list.slice(-10).reverse().forEach(u=>{ html+=`<div class="row approved"><b>${u.code}</b> - ${u.name||''}<div class="meta">${u.time||''}</div></div>`; }); if(list.length===0) html="<p class='empty'>No used codes yet.</p>"; document.getElementById('usedList').innerHTML=html; });
-    onValue(ref(db,'leaderboard'), snap=>{
-      let list = snap.exists()?Object.values(snap.val()):[]; list.sort((a,b)=>b.score-a.score);
-      document.getElementById('stats').innerText = "Leaderboard: "+list.length+" players • KSh "+(list.length*20)+" collected";
-      document.getElementById('winnerCount').innerText = list.length;
-      let html=""; list.slice(0,10).forEach((p,i)=>{
-let prize=i==0?"Pay KSh 250":i==1?"Pay KSh 150":i==2?"Pay KSh 100":""; html+=`<div class="row approved"><div class="row-head"><b>${i+1}. ${p.name}</b><span class="prize">${prize}</span></div><div style="font-weight:700;margin-top:4px">KSh ${p.score.toLocaleString()}</div><div class="meta">${p.date||''} • Ticket: ${p.ticket||''}</div></div>`; });
-      if(list.length===0) html="<p class='empty'>No scores yet.</p>"; document.getElementById('leaderList').innerHTML=html;
-    });
-  } else document.getElementById('pinErr').innerText="Wrong PIN";
+const BACKEND = "https://agent-backend-nio1.onrender.com";
+let leaders=[];
+window.unlock=()=>{
+  if(document.getElementById('pin').value!=="9989#ooko"){document.getElementById('pinErr').innerText="Wrong PIN";return;}
+  document.getElementById('login').style.display='none'; document.getElementById('admin').style.display='block'; loadGameState();
+  onValue(ref(db,'pending'), s=>{ let e=s.exists()?Object.entries(s.val()):[]; document.getElementById('pendingCount').innerText=e.length; document.getElementById('pendingList').innerHTML=e.length?e.map(([k,p])=>`<div class="row"><b>${p.name}</b><div>Code: ${p.code}</div><button onclick="approve('${k}','${p.name}','${p.code}')" style="background:#00C853;color:white;margin-top:8px">APPROVE</button> <button onclick="reject('${k}')" style="background:#DC2626;color:white">REJECT</button></div>`).join(''):'<p class="muted">No waiting</p>'; });
+  onValue(ref(db,'approved'), s=>{ let l=s.exists()?Object.values(s.val()):[]; document.getElementById('approvedCount').innerText=l.length; document.getElementById('approvedList').innerHTML=l.length?l.map(a=>`<div class="row" style="background:#F0FDF4;border-color:#00C853"><b>${a.name}</b><div class="meta">Ticket: ${a.playCode} • M-Pesa: ${a.mpesaCode}</div></div>`).join(''):'<p class="muted">No approved</p>'; });
+  onValue(ref(db,'leaderboard'), s=>{
+    let list=s.exists()?Object.values(s.val()):[]; list.sort((a,b)=>b.score-a.score); leaders=list;
+    document.getElementById('winnerCount').innerText=list.length;
+    let medals=["🥇 GOLD • 1st • Pay KSh 250","🥈 SILVER • 2nd • Pay KSh 150","🥉 BRONZE • 3rd • Pay KSh 100"];
+    document.getElementById('leaderList').innerHTML=list.map((p,i)=>{ let cls=i===0?'top1':i===1?'top2':i===2?'top3':''; let tag=i<3?medals[i]:`#${i+1}`; return `<div class="row ${cls}"><div style="display:flex;justify-content:space-between"><b>${i+1}. ${p.name}</b><span class="badge">${tag}</span></div><div style="font-weight:800;margin-top:4px">KSh ${p.score.toLocaleString()} • Phone: ${p.phone||'—'}</div><div class="meta">${p.date||''} • Ticket: ${p.ticket||''} • Plays: ${p.plays||1}/2</div></div>`; }).join('')||'<p class="muted">No scores yet</p>';
+  });
+  onValue(ref(db,'customQuestions'), s=>{ let l=s.exists()?Object.entries(s.val()):[]; document.getElementById('customQs').innerHTML=l.map(([k,q])=>`<div style="border:1px solid #E2E8F0;border-radius:12px;padding:12px;margin-top:10px;font-size:13px"><b>${q.q}</b><div style="color:#065F46"> Correct: ${q.correctText} <span style="color:#64748B">(shuffled in game)</span></div><button onclick="delQ('${k}')" style="background:#DC2626;color:white;padding:6px 10px;margin-top:6px">Delete</button></div>`).join('')||''; });
 };
-function renderPending(entries){
-  document.getElementById('pendingCount').innerText = entries.length;
-  let html=""; if(entries.length===0) html="<p class='empty'>No waiting payments.</p>";
-  entries.forEach(([key,p])=>{ html+=`<div class="row"><div class="row-head"><b>${p.name}</b><span class="badge badge-waiting">WAITING</span></div><div style="font-weight:800;margin-top:4px">Code: ${p.code}</div><div class="meta">${p.time}</div><button onclick="approve('${key}', '${p.name}', '${p.code}')" class="btn-approve">APPROVE - Money Came</button><button onclick="reject('${key}','${p.code}')" class="btn-reject">REJECT - No Money</button></div>`; });
-  document.getElementById('pendingList').innerHTML=html;
-}
-function renderApproved(list){
-  document.getElementById('approvedCount').innerText = list.length;
-  let html=""; if(list.length===0) html="<p class='empty'>No approved yet.</p>";
-  list.forEach(a=>{ html+=`<div class="row approved"><div class="row-head"><b>${a.name}</b><span class="badge ${a.used?"badge-used":"badge-ready"}">${a.used?"USED":"READY"}</span></div><div class="meta">Ticket: ${a.playCode} • M-Pesa: ${a.mpesaCode}</div></div>`; });
-  document.getElementById('approvedList').innerHTML=html;
-}
-window.approve = async (key, name, code)=>{
-  // BLOCK REUSE IN ADMIN TOO
-  let usedSnap = await get(ref(db,'usedCodes'));
-  if(usedSnap.exists() && Object.values(usedSnap.val()).some(v=>v.code===code || v===code)){
-    await remove(ref(db,'pending/'+key));
-    alert("BLOCKED! Code "+code+" ALREADY USED. Do not approve. Player must send new KSh 20.");
-    return;
-  }
-  let appSnap = await get(ref(db,'approved'));
-  if(appSnap.exists() && Object.values(appSnap.val()).some(v=>v.mpesaCode===code)){
-    await remove(ref(db,'pending/'+key));
-    alert("BLOCKED! Code "+code+" already approved before. Player must send new KSh 20.");
-    return;
-  }
-  let playCode="PLAY-"+Math.floor(1000+Math.random()*9000);
-  await push(ref(db,'approved'), {name, mpesaCode:code, playCode, time:new Date().toLocaleString(), used:false});
-  await remove(ref(db,'pending/'+key));
-  alert("APPROVED! "+name+" is approved. Game will start automatically on their phone.");
-};
-window.reject = async (key, code)=>{ await remove(ref(db,'pending/'+key)); alert("Rejected "+code); };
-window.clearAll = async ()=>{
-  if(confirm("Clear all? Do after paying winners. NOTE: This also clears Used Codes - only do after tournament ends, otherwise old codes can be reused.")){
-    await remove(ref(db,'pending')); await remove(ref(db,'approved')); await remove(ref(db,'leaderboard')); await remove(ref(db,'usedCodes'));
-  }
-};
-</script>
-</body>
-</html>
+async function loadGameState(){ try{ let r=await fetch(BACKEND+'/api/game-state'); let d=await r.json(); document.getElementById('totalBox').innerText=`Game: ${d.status.toUpperCase()} • Session: ${d.sessionId} • Total Collected: KSh ${d.totalCollected||0} • Paid: ${d.totalPlayers||0}`; }catch(e){} }
+window.openGame=async()=>{ let r=await fetch(BACKEND+'/api/game-open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})}); let d=await r.json(); alert(d.ok?"GAME OPENED  Players can now play twice.":"Failed "+d.msg); loadGameState(); };
+window.closeGame=async()=>{ await fetch(BACKEND+'/api/game-close',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})}); alert("GAME CLOSED"); loadGameState(); };
+window.resetGame=async()=>{ if(!confirm("Reset? Clears Pending/Approved/Leaderboard + closes game for next 11AM/8PM play."))return; await fetch(BACKEND+'/api/game-reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})}); await remove(ref(db,'pending')); await remove(ref(db,'approved')); await remove(ref(db,'leaderboard')); await remove(ref(db,'usedCodes')); alert("RESET DONE  Ready for next game"); loadGameState(); };
+window.payAllTop3=async()=>{ if(leaders.length<3){ alert("Need at least Top 3 players"); return; } let top3=leaders.slice(0,3); let amounts=[250,150,100]; if(!confirm(`Pay ALL Top 3?\n1. ${top3[0].name} - KSh 250 to ${top3[0].phone||'?'}\n2. ${top3[1].name} - KSh 150 to ${top3[1].phone||'?'}\n3. ${top3[2].name} - KSh 100 to ${top3[2].phone||'?'}\nTotal KSh 500`)) return; document.getElementById('payResult').innerText="Paying all 3..."; let winners=top3.map((p,i)=>({name:p.name, phone:p.phone, amount:amounts[i]})); let r=await fetch(BACKEND+'/api/pay-winners',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko", winners})}); let d=await r.json(); if(d.manual){ document.getElementById('payResult').innerText="B2C not set in Render - Pay manually:\n"+winners.map(w=>`${w.name} - ${w.phone} - KSh ${w.amount}`).join('\n'); } else if(d.ok){ document.getElementById('payResult').innerText=" ALL 3 PAID!"; } else document.getElementById('payResult').innerText="Failed: "+d.msg; };
+window.addQuestion=async()=>{ let q=document.getElementById('qText').value.trim(), c=document.getElementById('qCorrect').value.trim(), w1=document.getElementById('qW1').value.trim(), w2=document.getElementById('qW2').value.trim(), w3=document.getElementById('qW3').value.trim(), ex=document.getElementById('qExplain').value.trim(); if(!q||!c||!w1) {document.getElementById('qMsg').innerText="Fill Question + Correct + at least Wrong 1";return;} await push(ref(db,'customQuestions'),{q, correctText:c, wrongs:[w1,w2||"Wrong",w3||"Wrong"], explain:ex||""}); document.getElementById('qMsg').innerText=" Question added! It will be shuffled in next games."; };
+window.delQ=async(k)=>{ await remove(ref(db,'customQuestions/'+k)); };
+window.approve=async(k,name,code)=>{ let playCode="PLAY-"+Math.floor(1000+Math.random()*9000); await push(ref(db,'approved'),{name, mpesaCode:code, playCode, time:new Date().toLocaleString(), used:false}); await remove(ref(db,'pending/'+k)); alert("APPROVED "+name); };
+window.reject=async(k)=>{ await remove(ref(db,'pending/'+k)); };
+</script></body></html>
