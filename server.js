@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 
 app.use(cors({ origin: '*', methods: ['GET','POST','OPTIONS'] }));
@@ -44,7 +45,6 @@ async function getToken(key = KEY, secret = SECRET) {
 }
 
 // --- HEALTH ---
-app.get('/', (req, res) => res.send("Agent Backend Running - Env: " + ENV + " Shortcode: " + SHORTCODE + " Game: " + gameState.status));
 app.get('/api/health', (req, res) => res.json({ ok: true, game: gameState.status, env: ENV, shortcode: SHORTCODE }));
 
 // --- GAME CONTROL ---
@@ -79,10 +79,8 @@ app.post('/api/stk-push', async (req, res) => {
     let { phone, name } = req.body || {};
     if (!phone) return res.json({ ResponseCode: "1", ResponseDescription: "Phone required" });
     phone = cleanPhone(phone);
-
     if ((plays[phone] || 0) >= 2) return res.json({ ResponseCode: "1", ResponseDescription: "You have already played twice for this game. Wait for next game 11AM / 8PM." });
     if (gameState.status !== "open") return res.json({ ResponseCode: "1", ResponseDescription: "Game is CLOSED. Wait for Admin to open 11AM / 8PM game." });
-
     const token = await getToken();
     const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
     const timestamp = now.toISOString().replace(/[-:T.]/g, '').slice(0, 14);
@@ -92,7 +90,6 @@ app.post('/api/stk-push', async (req, res) => {
       TransactionType: TRANSACTION_TYPE, Amount: 20, PartyA: phone, PartyB: SHORTCODE,
       PhoneNumber: phone, CallBackURL: CALLBACK_URL, AccountReference: "TOURNAMENT", TransactionDesc: "Agent Spot The Fake Entry"
     }, { headers: { Authorization: `Bearer ${token}` } });
-
     paidPhones[phone] = { paid: false, checkoutId: resp.data.CheckoutRequestID, name };
     plays[phone] = (plays[phone] || 0) + 1;
     res.json({ ...resp.data, playCount: plays[phone] });
@@ -107,7 +104,6 @@ app.post('/api/callback', (req, res) => {
     const cb = req.body.Body.stkCallback;
     if (cb.ResultCode === 0) {
       const phone = cb.CallbackMetadata.Item.find(i => i.Name === 'PhoneNumber').Value.toString();
-      // Prevent double-count if Safaricom retries callback
       if (!paidPhones[phone] || !paidPhones[phone].paid) {
         paidPhones[phone] = { paid: true, ticket: cb.CheckoutRequestID, name: paidPhones[phone]?.name };
         gameState.totalCollected += 20;
@@ -154,6 +150,9 @@ app.post('/api/pay-winners', async (req, res) => {
 
 // Static LAST - so it never hijacks /api routes
 app.use(express.static(__dirname));
+
+// ROOT - Player face, MUST be after API routes, before listen
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Running on " + PORT + " | Env: " + ENV + " | Shortcode: " + SHORTCODE));
