@@ -33,7 +33,11 @@ button{border:0;border-radius:12px;padding:13px;font-weight:800;cursor:pointer;f
 <div id="login" class="card"><h2>Admin Login</h2><p class="muted">Enter PIN to manage game, winners & questions.</p><input id="pin" type="password" placeholder="Enter Admin PIN"><button class="btn-green" onclick="unlock()">Unlock Admin Panel</button><p id="pinErr" style="color:#DC2626;font-weight:700;font-size:13px"></p></div>
 <div id="admin" style="display:none">
 <div class="card card-dark"><b id="stats">Loading...</b><br><span style="font-size:12.5px;color:#94A3B8" id="totalBox"></span>
-<div class="flex" style="margin-top:14px"><button onclick="openGame()" style="background:#00C853;color:white">▶ OPEN GAME</button><button onclick="closeGame()" style="background:#DC2626;color:white">■ CLOSE GAME</button></div>
+<div class="flex" style="margin-top:14px">
+<button id="openBtn" type="button" style="background:#00C853;color:white;padding:16px;font-size:15px">▶ OPEN GAME</button>
+<button id="closeBtn" type="button" style="background:#DC2626;color:white;padding:16px;font-size:15px">■ CLOSE GAME</button>
+</div>
+<p id="btnMsg" style="font-size:12px;color:#FDE68A;margin-top:8px"></p>
 <p style="font-size:11.5px;color:#94A3B8;margin-top:10px;line-height:1.5">Open = players can pay KSh 20 + play twice.<br>Close = no new plays. Reset clears for next 11AM / 8PM game.</p></div>
 
 <div class="section-title">🏆 Top 3 + All Active Players <span class="count" id="winnerCount">0</span></div>
@@ -86,4 +90,27 @@ window.addQuestion=async()=>{ let q=document.getElementById('qText').value.trim(
 window.delQ=async(k)=>{ await remove(ref(db,'customQuestions/'+k)); };
 window.approve=async(k,name,code)=>{ let playCode="PLAY-"+Math.floor(1000+Math.random()*9000); await push(ref(db,'approved'),{name, mpesaCode:code, playCode, time:new Date().toLocaleString(), used:false}); await remove(ref(db,'pending/'+k)); alert("APPROVED "+name); };
 window.reject=async(k)=>{ await remove(ref(db,'pending/'+k)); };
-</script></body></html>
+// MAKE BUTTONS ALWAYS CLICKABLE - even if module fails
+document.getElementById('openBtn').addEventListener('click', async ()=>{
+  document.getElementById('btnMsg').innerText = "Opening... wait 30s if Render is sleeping...";
+  try{
+    let r = await fetch(BACKEND+'/api/game-open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})});
+    let d = await r.json();
+    document.getElementById('btnMsg').innerText = "OPEN Result: " + JSON.stringify(d);
+    alert("OPEN: " + JSON.stringify(d));
+    await loadGameState();
+  }catch(e){ document.getElementById('btnMsg').innerText = "OPEN FAILED: "+e.message; alert("OPEN FAILED: "+e.message); }
+});
+document.getElementById('closeBtn').addEventListener('click', async ()=>{
+  document.getElementById('btnMsg').innerText = "Closing...";
+  try{
+    let r = await fetch(BACKEND+'/api/game-close',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})});
+    let d = await r.json();
+    document.getElementById('btnMsg').innerText = "CLOSE Result: " + JSON.stringify(d);
+    alert("CLOSE: " + JSON.stringify(d));
+    await loadGameState();
+  }catch(e){ document.getElementById('btnMsg').innerText = "CLOSE FAILED: "+e.message; alert("CLOSE FAILED: "+e.message); }
+});
+</script>
+</body>
+</html>
