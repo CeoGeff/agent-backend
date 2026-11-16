@@ -1,4 +1,4 @@
-// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN - FIXED STORE + TILL
+// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN - PRODUCTION 9528434
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -13,10 +13,9 @@ app.use(express.urlencoded({ extended: true }));
 const CONSUMER_KEY = process.env.DARAJA_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.DARAJA_CONSUMER_SECRET;
 const PASSKEY = process.env.DARAJA_PASSKEY;
-// STORE NUMBER from Daraja App - 9528434 - Used for Auth + BusinessShortCode
+// STORE NUMBER from Production App - 9528434 - Used for BOTH BusinessShortCode + PartyB
 const SHORTCODE = process.env.DARAJA_SHORTCODE || '9528434';
-// TILL NUMBER - 3056305 - Where money goes - PartyB
-const TILL = process.env.DARAJA_TILL || '3056305';
+const TILL = process.env.DARAJA_TILL || '9528434';
 const ENV = (process.env.DARAJA_ENV || 'production').toLowerCase();
 const CALLBACK_URL = process.env.CALLBACK_URL || 'https://agent-backend-nio1.onrender.com/api/callback';
 const ADMIN_PIN = process.env.ADMIN_PIN || '9989#ooko';
@@ -94,17 +93,16 @@ app.post('/api/pay', async (req, res) => {
     const { token, base } = await getToken();
     const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
     const timestamp = now.toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
-    // PASSWORD USES STORE NUMBER 9528434, NOT TILL
     const password = Buffer.from(`${SHORTCODE}${PASSKEY}${timestamp}`).toString('base64');
 
     const payload = {
-      BusinessShortCode: SHORTCODE, // 9528434 - Store
+      BusinessShortCode: SHORTCODE,
       Password: password,
       Timestamp: timestamp,
       TransactionType: 'CustomerBuyGoodsOnline',
       Amount: amount,
       PartyA: phone,
-      PartyB: TILL, // 3056305 - Till where money goes
+      PartyB: TILL,
       PhoneNumber: phone,
       CallBackURL: CALLBACK_URL,
       AccountReference: 'AGENT',
