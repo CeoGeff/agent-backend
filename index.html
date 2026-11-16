@@ -176,17 +176,16 @@ async function payWithMpesa(){
   if(!gs || gs.status !== "open"){ err.innerText = "Game is CLOSED. Admin will open at 11AM / 8PM."; document.getElementById('statusArea').innerHTML=""; return; }
   document.getElementById('statusArea').innerHTML = `<div class="statusBox waiting"><span class="spinner"></span> Sending STK Push to ${phone}...<br>Check your phone and enter M-PESA PIN</div>`;
   try{
-    let res = await fetch(BACKEND_URL + '/api/stk-push', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ phone, name }) });
+    let res = await fetch(BACKEND_URL + '/api/pay', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ phone, name }) });
     let data = await res.json().catch(()=>({}));
     if(!res.ok){
       document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">${data.error || data.ResponseDescription || data.message || ('Server error: ' + res.status)}</div>`;
       return;
     }
-    if(data.ResponseCode == "0"){
+    if(data.ok || data.ResponseCode == "0"){
       document.getElementById('statusArea').innerHTML = `<div class="statusBox approvedBox">STK SENT! Check phone for PIN. Payment confirming...</div>`;
-      currentTicket = data.CheckoutRequestID || "STK-" + Date.now();
+      currentTicket = data.checkoutId || data.CheckoutRequestID || "STK-" + Date.now();
       startAutoPoll(phone);
-      setTimeout(()=>{ isTournament = true; startLevel(4); }, 1200);
     } else {
       document.getElementById('statusArea').innerHTML = `<div class="statusBox rejectedBox">${data.ResponseDescription || data.error || 'Try again'}</div>`;
     }
