@@ -1,4 +1,4 @@
-// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN
+// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN - FIXED 01
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -21,17 +21,28 @@ const ADMIN_PIN = process.env.ADMIN_PIN || '9989#ooko';
 // --- Game State ---
 let game = { status: 'closed', totalCollected: 0, players: [], winners: [] };
 
+// --- Helper: Clean phone to 254... - Accepts 07, 01, 2547, 2541, +254 ---
+function cleanPhone(input) {
+  let phone = String(input || '').replace(/\s/g, '').replace(/^\+/, '');
+  if (/^0/.test(phone)) phone = '254' + phone.slice(1);
+  if (/^(7|1)\d{8}$/.test(phone)) phone = '254' + phone;
+  return phone;
+}
+
+function isValidPhone(phone) {
+  return /^254[17]\d{8}$/.test(phone);
+}
+
 // --- Health Check ---
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, game: game.status, env: ENV, shortcode: SHORTCODE, hasKey: !!CONSUMER_KEY, hasSecret: !!CONSUMER_SECRET, hasPasskey: !!PASSKEY, totalCollected: game.totalCollected });
 });
 
-// --- FIX 1: Game Status for Player page - THIS WAS MISSING ---
+// --- Game Status for Player page ---
 app.get('/api/game-state', (req, res) => {
   res.json({ status: game.status, sessionId: 'AGENT-' + new Date().toISOString().slice(0, 10), totalCollected: game.totalCollected, totalPlayers: game.players.filter(p => p.paid).length });
 });
 
-// Keep old route for Admin compatibility
 app.get('/api/game', (req, res) => {
   res.json(game);
 });
@@ -55,7 +66,7 @@ app.post('/api/admin/reset', (req, res) => {
   res.json({ ok: true, game });
 });
 
-// --- FIX 2: Admin Stats - for Admin page ---
+// --- Admin Stats ---
 app.get('/api/admin/stats', (req, res) => {
   if (String(req.query.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   res.json({ ok: true, game: game.status, totalCollected: game.totalCollected, paidPlayers: game.players.filter(p => p.paid), allPlayers: game.players });
@@ -78,9 +89,8 @@ app.post('/api/pay', async (req, res) => {
     if (!name || !phone) return res.status(400).json({ ok: false, error: 'Name and Phone are required' });
     if (!CONSUMER_KEY || !CONSUMER_SECRET || !PASSKEY) return res.status(500).json({ ok: false, error: 'Daraja keys missing in Render Environment' });
 
-    phone = String(phone).replace(/\s/g, '').replace(/^\+/, '');
-    if (/^0/.test(phone)) phone = '254' + phone.slice(1);
-    if (!/^254[17]\d{8}$/.test(phone)) return res.status(400).json({ ok: false, error: 'Use a valid Safaricom number like 0798892857' });
+    phone = cleanPhone(phone);
+    if (!isValidPhone(phone)) return res.status(400).json({ ok: false, error: 'Use a valid Safaricom number like 0798892857 or 0113758976' });
 
     const { token, base } = await getToken();
     const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
@@ -130,10 +140,9 @@ app.post('/api/callback', (req, res) => {
   res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
 });
 
-// --- FIX 3: Check Payment - Player polls this every 3s - THIS WAS MISSING ---
+// --- Check Payment - Player polls this every 3s ---
 app.get('/api/check-payment', (req, res) => {
-  let phone = String(req.query.phone || '').replace(/\s/g, '').replace(/^\+/, '');
-  if (/^0/.test(phone)) phone = '254' + phone.slice(1);
+  const phone = cleanPhone(req.query.phone);
   const player = [...game.players].reverse().find(p => p.phone === phone);
   if (player && player.paid) return res.json({ paid: true, ticket: player.checkoutId, name: player.name });
   res.json({ paid: false });
@@ -146,7 +155,7 @@ app.post('/api/winners', (req, res) => {
   res.json({ ok: true });
 });
 
-// --- API 404 - Must return JSON, never HTML ---
+// --- API 404 ---
 app.use('/api', (req, res) => {
   res.status(404).json({ ok: false, error: 'API not found: ' + req.path });
 });
