@@ -70,19 +70,15 @@ import { getDatabase, ref, onValue, push, remove } from "https://www.gstatic.com
 const firebaseConfig = { apiKey: "AIzaSyCCE1lmG1u0mJk_iUkaG0vr_5RqoswBSNs", authDomain: "agent-spot-fake.firebaseapp.com", databaseURL: "https://agent-spot-fake-default-rtdb.firebaseio.com", projectId: "agent-spot-fake", storageBucket: "agent-spot-fake.firebasestorage.app", messagingSenderId: "422926632685", appId: "1:422926632685:web:588449ea7fa6fdada76ee4", measurementId: "G-2LPC3732XZ" };
 const app = initializeApp(firebaseConfig); const db = getDatabase(app);
 const BACKEND = window.location.origin;
+const PIN = "9989#ooko";
 let leaders=[];
 async function api(path, options){
-  try{
-    let r = await fetch(BACKEND + path, options);
-    return await r.json();
-  }catch(e){
-    await new Promise(res=>setTimeout(res,8000));
-    let r2 = await fetch(BACKEND + path, options);
-    return await r2.json();
-  }
+  let r = await fetch(BACKEND + path, options);
+  let text = await r.text();
+  try { return JSON.parse(text); } catch(e) { throw new Error('Server returned HTML, not JSON. Path: ' + path + ' Status: ' + r.status); }
 }
 window.unlock=()=>{
-  if(document.getElementById('pin').value!=="9989#ooko"){document.getElementById('pinErr').innerText="Wrong PIN";return;}
+  if(document.getElementById('pin').value!==PIN){document.getElementById('pinErr').innerText="Wrong PIN";return;}
   document.getElementById('login').style.display='none'; document.getElementById('admin').style.display='block'; loadGameState();
   onValue(ref(db,'pending'), s=>{ let e=s.exists()?Object.entries(s.val()):[]; document.getElementById('pendingCount').innerText=e.length; document.getElementById('pendingList').innerHTML=e.length?e.map(([k,p])=>`<div class="row"><b>${p.name}</b><div>Code: ${p.code}</div><button class="btn-approve" onclick="approve('${k}','${p.name}','${p.code}')">APPROVE</button> <button class="btn-reject" onclick="reject('${k}')">REJECT</button></div>`).join(''):'<p class="muted">No waiting</p>'; });
   onValue(ref(db,'approved'), s=>{ let l=s.exists()?Object.values(s.val()):[]; document.getElementById('approvedCount').innerText=l.length; document.getElementById('approvedList').innerHTML=l.length?l.map(a=>`<div class="row" style="background:#F0FDF4;border-color:#15803D"><b>${a.name}</b><div class="meta">Ticket: ${a.playCode} | M-Pesa: ${a.mpesaCode}</div></div>`).join(''):'<p class="muted">No approved</p>'; });
@@ -94,28 +90,28 @@ window.unlock=()=>{
   });
   onValue(ref(db,'customQuestions'), s=>{ let l=s.exists()?Object.entries(s.val()):[]; document.getElementById('customQs').innerHTML=l.map(([k,q])=>`<div style="border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-top:10px;font-size:13px"><b>${q.q}</b><div style="color:#14532D">Correct: ${q.correctText} <span style="color:#64748B">(shuffled in game)</span></div><button class="btn-delete" onclick="delQ('${k}')">Delete</button></div>`).join('')||''; });
 };
-async function loadGameState(){ try{ let d=await api('/api/game-state'); document.getElementById('stats').innerText=`Game: ${d.status.toUpperCase()} | ${d.status==='open'?'OPEN':'CLOSED'}`; document.getElementById('totalBox').innerText=`Session: ${d.sessionId} | Total Collected: KSh ${d.totalCollected||0} | Paid: ${d.totalPlayers||0}`; }catch(e){ document.getElementById('stats').innerText="Backend sleeping - click OPEN again in 10s"; } }
-window.openGame=async()=>{ let d=await api('/api/game-open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})}); alert(d.ok?"GAME OPENED - Players can now play twice.":"Failed "+d.msg); loadGameState(); };
-window.closeGame=async()=>{ let d=await api('/api/game-close',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})}); alert("GAME CLOSED"); loadGameState(); };
-window.resetGame=async()=>{ if(!confirm("Reset? Clears Pending/Approved/Leaderboard + closes game for next 11AM/8PM play."))return; await api('/api/game-reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})}); await remove(ref(db,'pending')); await remove(ref(db,'approved')); await remove(ref(db,'leaderboard')); await remove(ref(db,'usedCodes')); alert("RESET DONE - Ready for next game"); loadGameState(); };
-window.payAllTop3=async()=>{ if(leaders.length<3){ alert("Need at least Top 3 players"); return; } let top3=leaders.slice(0,3); let amounts=[250,150,100]; if(!confirm(`Pay ALL Top 3?\n1. ${top3[0].name} - KSh 250 to ${top3[0].phone||'?'}\n2. ${top3[1].name} - KSh 150 to ${top3[1].phone||'?'}\n3. ${top3[2].name} - KSh 100 to ${top3[2].phone||'?'}\nTotal KSh 500`)) return; document.getElementById('payResult').innerText="Paying all 3..."; let winners=top3.map((p,i)=>({name:p.name, phone:p.phone, amount:amounts[i]})); let d=await api('/api/pay-winners',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko", winners})}); if(d.manual){ document.getElementById('payResult').innerText="B2C not set in Render - Pay manually:\n"+winners.map(w=>`${w.name} - ${w.phone} - KSh ${w.amount}`).join('\n'); } else if(d.ok){ document.getElementById('payResult').innerText="ALL 3 PAID"; } else document.getElementById('payResult').innerText="Failed: "+d.msg; };
+async function loadGameState(){ try{ let d=await api('/api/game'); document.getElementById('stats').innerText=`Game: ${d.status.toUpperCase()} | ${d.status==='open'?'OPEN':'CLOSED'}`; document.getElementById('totalBox').innerText=`Total Collected: KSh ${d.totalCollected||0} | Players in Backend: ${d.players ? d.players.length : 0}`; }catch(e){ document.getElementById('stats').innerText="Backend sleeping - click OPEN again in 10s"; } }
+window.openGame=async()=>{ let d=await api('/api/admin/open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:PIN})}); alert(d.ok?"GAME OPENED - Players can now play twice.":"Failed "+(d.error||'')); loadGameState(); };
+window.closeGame=async()=>{ let d=await api('/api/admin/close',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:PIN})}); alert("GAME CLOSED"); loadGameState(); };
+window.resetGame=async()=>{ if(!confirm("Reset? Clears Pending/Approved/Leaderboard + closes game for next 11AM/8PM play."))return; await api('/api/admin/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:PIN})}); await remove(ref(db,'pending')); await remove(ref(db,'approved')); await remove(ref(db,'leaderboard')); await remove(ref(db,'usedCodes')); alert("RESET DONE - Ready for next game"); loadGameState(); };
+window.payAllTop3=async()=>{ if(leaders.length<3){ alert("Need at least Top 3 players"); return; } let top3=leaders.slice(0,3); let amounts=[250,150,100]; if(!confirm(`Pay ALL Top 3?\n1. ${top3[0].name} - KSh 250 to ${top3[0].phone||'?'}\n2. ${top3[1].name} - KSh 150 to ${top3[1].phone||'?'}\n3. ${top3[2].name} - KSh 100 to ${top3[2].phone||'?'}\nTotal KSh 500`)) return; document.getElementById('payResult').innerText="Saving winners..."; let winners=top3.map((p,i)=>({name:p.name, phone:p.phone, amount:amounts[i]})); let d=await api('/api/winners',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:PIN, winners})}); if(d.ok){ document.getElementById('payResult').innerText="Winners saved. Pay manually from Till:\n"+winners.map(w=>`${w.name} - ${w.phone} - KSh ${w.amount}`).join('\n'); } else document.getElementById('payResult').innerText="Failed: "+(d.error||''); };
 window.addQuestion=async()=>{ let q=document.getElementById('qText').value.trim(), c=document.getElementById('qCorrect').value.trim(), w1=document.getElementById('qW1').value.trim(), w2=document.getElementById('qW2').value.trim(), w3=document.getElementById('qW3').value.trim(), ex=document.getElementById('qExplain').value.trim(); if(!q||!c||!w1) {document.getElementById('qMsg').innerText="Fill Question + Correct + at least Wrong 1";return;} await push(ref(db,'customQuestions'),{q, correctText:c, wrongs:[w1,w2||"Wrong",w3||"Wrong"], explain:ex||""}); document.getElementById('qMsg').innerText="Question added. It will be shuffled in next games."; };
 window.delQ=async(k)=>{ await remove(ref(db,'customQuestions/'+k)); };
 window.approve=async(k,name,code)=>{ let playCode="PLAY-"+Math.floor(1000+Math.random()*9000); await push(ref(db,'approved'),{name, mpesaCode:code, playCode, time:new Date().toLocaleString(), used:false}); await remove(ref(db,'pending/'+k)); alert("APPROVED "+name); };
 window.reject=async(k)=>{ await remove(ref(db,'pending/'+k)); };
 document.getElementById('openBtn').addEventListener('click', async ()=>{
-  document.getElementById('btnMsg').innerText = "Opening... if Render was sleeping, wait 10s, it will retry automatically...";
+  document.getElementById('btnMsg').innerText = "Opening...";
   try{
-    let d = await api('/api/game-open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})});
+    let d = await api('/api/admin/open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:PIN})});
     document.getElementById('btnMsg').innerText = "OPEN Result: " + JSON.stringify(d);
-    alert(d.ok ? "GAME OPENED - Players can now play" : "Failed: " + d.msg);
+    alert(d.ok ? "GAME OPENED - Players can now play" : "Failed: " + (d.error||''));
     await loadGameState();
-  }catch(e){ document.getElementById('btnMsg').innerText = "OPEN FAILED: "+e.message + " - Click OPEN again"; alert("OPEN FAILED: "+e.message+" - Click again, Render was waking up"); }
+  }catch(e){ document.getElementById('btnMsg').innerText = "OPEN FAILED: "+e.message; alert("OPEN FAILED: "+e.message); }
 });
 document.getElementById('closeBtn').addEventListener('click', async ()=>{
   document.getElementById('btnMsg').innerText = "Closing...";
   try{
-    let d = await api('/api/game-close',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:"9989#ooko"})});
+    let d = await api('/api/admin/close',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:PIN})});
     document.getElementById('btnMsg').innerText = "CLOSE Result: " + JSON.stringify(d);
     alert("GAME CLOSED");
     await loadGameState();
