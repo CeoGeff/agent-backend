@@ -6,7 +6,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
 
 // --- Config from Render Environment ---
 const CONSUMER_KEY = process.env.DARAJA_CONSUMER_KEY;
@@ -20,7 +19,7 @@ const ADMIN_PIN = '9989#ooko';
 // --- Game State ---
 let game = { status: 'closed', totalCollected: 0, players: [], winners: [] };
 
-// --- Health Check - This is what you just tested ---
+// --- Health Check ---
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, game: game.status, env: ENV, shortcode: SHORTCODE, hasKey: !!CONSUMER_KEY, hasSecret: !!CONSUMER_SECRET, hasPasskey: !!PASSKEY, totalCollected: game.totalCollected });
 });
@@ -36,11 +35,13 @@ app.post('/api/admin/open', (req, res) => {
   game.status = 'open';
   res.json({ ok: true, game });
 });
+
 app.post('/api/admin/close', (req, res) => {
   if (req.body.pin !== ADMIN_PIN) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   game.status = 'closed';
   res.json({ ok: true, game });
 });
+
 app.post('/api/admin/reset', (req, res) => {
   if (req.body.pin !== ADMIN_PIN) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   game = { status: game.status, totalCollected: 0, players: [], winners: [] };
@@ -58,7 +59,8 @@ async function getToken() {
 // --- PAY - Real STK Push ---
 app.post('/api/pay', async (req, res) => {
   try {
-    let { name, phone, amount } = req.body;
+    let { name, phone } = req.body;
+    const amount = 20;
     if (game.status !== 'open') return res.status(400).json({ ok: false, error: 'Game is CLOSED. Ask Admin to OPEN.' });
     if (!name || !phone) return res.status(400).json({ ok: false, error: 'Name and Phone are required' });
     if (!CONSUMER_KEY || !CONSUMER_SECRET || !PASSKEY) return res.status(500).json({ ok: false, error: 'Daraja keys missing in Render Environment' });
@@ -68,9 +70,11 @@ app.post('/api/pay', async (req, res) => {
     if (/^0/.test(phone)) phone = '254' + phone.slice(1);
     if (!/^254[17]\d{8}$/.test(phone)) return res.status(400).json({ ok: false, error: 'Use a valid Safaricom number like 0798892857' });
 
-    amount = Number(amount) || 20;
     const { token, base } = await getToken();
-    const timestamp = new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
+
+    // Kenya time (UTC + 3) for Daraja timestamp: YYYYMMDDHHMMSS
+    const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
+    const timestamp = now.toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
     const password = Buffer.from(`${SHORTCODE}${PASSKEY}${timestamp}`).toString('base64');
 
     const payload = {
@@ -94,7 +98,6 @@ app.post('/api/pay', async (req, res) => {
     res.json({ ok: true, checkoutId: r.data.CheckoutRequestID, message: 'STK sent. Enter PIN on your phone.' });
   } catch (e) {
     console.log('PAY ERROR:', e.response?.data || e.message);
-    // Show REAL Daraja error, not generic 400
     const d = e.response?.data;
     res.status(400).json({ ok: false, error: d ? (d.errorMessage || d.ResponseDescription || JSON.stringify(d)) : e.message });
   }
@@ -124,6 +127,14 @@ app.post('/api/winners', (req, res) => {
   game.winners = req.body.winners || [];
   res.json({ ok: true });
 });
+
+// --- API 404 - Must return JSON, never HTML ---
+app.use('/api', (req, res) => {
+  res.status(404).json({ ok: false, error: 'API not found: ' + req.path });
+});
+
+// --- Static Files LAST ---
+app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log('AGENT Backend Live on', PORT, 'Env:', ENV, 'Shortcode:', SHORTCODE));
