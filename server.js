@@ -1,4 +1,4 @@
-// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN - FIXED 01
+// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN - FIXED STORE + TILL
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -13,7 +13,10 @@ app.use(express.urlencoded({ extended: true }));
 const CONSUMER_KEY = process.env.DARAJA_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.DARAJA_CONSUMER_SECRET;
 const PASSKEY = process.env.DARAJA_PASSKEY;
-const SHORTCODE = process.env.DARAJA_SHORTCODE || '3056305';
+// STORE NUMBER from Daraja App - 9528434 - Used for Auth + BusinessShortCode
+const SHORTCODE = process.env.DARAJA_SHORTCODE || '9528434';
+// TILL NUMBER - 3056305 - Where money goes - PartyB
+const TILL = process.env.DARAJA_TILL || '3056305';
 const ENV = (process.env.DARAJA_ENV || 'production').toLowerCase();
 const CALLBACK_URL = process.env.CALLBACK_URL || 'https://agent-backend-nio1.onrender.com/api/callback';
 const ADMIN_PIN = process.env.ADMIN_PIN || '9989#ooko';
@@ -28,21 +31,19 @@ function cleanPhone(input) {
   if (/^(7|1)\d{8}$/.test(phone)) phone = '254' + phone;
   return phone;
 }
-
 function isValidPhone(phone) {
   return /^254[17]\d{8}$/.test(phone);
 }
 
 // --- Health Check ---
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, game: game.status, env: ENV, shortcode: SHORTCODE, hasKey: !!CONSUMER_KEY, hasSecret: !!CONSUMER_SECRET, hasPasskey: !!PASSKEY, totalCollected: game.totalCollected });
+  res.json({ ok: true, game: game.status, env: ENV, shortcode: SHORTCODE, till: TILL, hasKey: !!CONSUMER_KEY, hasSecret: !!CONSUMER_SECRET, hasPasskey: !!PASSKEY, totalCollected: game.totalCollected });
 });
 
 // --- Game Status for Player page ---
 app.get('/api/game-state', (req, res) => {
   res.json({ status: game.status, sessionId: 'AGENT-' + new Date().toISOString().slice(0, 10), totalCollected: game.totalCollected, totalPlayers: game.players.filter(p => p.paid).length });
 });
-
 app.get('/api/game', (req, res) => {
   res.json(game);
 });
@@ -53,13 +54,11 @@ app.post('/api/admin/open', (req, res) => {
   game.status = 'open';
   res.json({ ok: true, game });
 });
-
 app.post('/api/admin/close', (req, res) => {
   if (String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   game.status = 'closed';
   res.json({ ok: true, game });
 });
-
 app.post('/api/admin/reset', (req, res) => {
   if (String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   game = { status: game.status, totalCollected: 0, players: [], winners: [] };
@@ -95,16 +94,17 @@ app.post('/api/pay', async (req, res) => {
     const { token, base } = await getToken();
     const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
     const timestamp = now.toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
+    // PASSWORD USES STORE NUMBER 9528434, NOT TILL
     const password = Buffer.from(`${SHORTCODE}${PASSKEY}${timestamp}`).toString('base64');
 
     const payload = {
-      BusinessShortCode: SHORTCODE,
+      BusinessShortCode: SHORTCODE, // 9528434 - Store
       Password: password,
       Timestamp: timestamp,
       TransactionType: 'CustomerBuyGoodsOnline',
       Amount: amount,
       PartyA: phone,
-      PartyB: SHORTCODE,
+      PartyB: TILL, // 3056305 - Till where money goes
       PhoneNumber: phone,
       CallBackURL: CALLBACK_URL,
       AccountReference: 'AGENT',
@@ -140,7 +140,7 @@ app.post('/api/callback', (req, res) => {
   res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
 });
 
-// --- Check Payment - Player polls this every 3s ---
+// --- Check Payment ---
 app.get('/api/check-payment', (req, res) => {
   const phone = cleanPhone(req.query.phone);
   const player = [...game.players].reverse().find(p => p.phone === phone);
@@ -164,4 +164,4 @@ app.use('/api', (req, res) => {
 app.use(express.static(path.join(__dirname)));
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log('AGENT Backend Live on', PORT, 'Env:', ENV, 'Shortcode:', SHORTCODE));
+app.listen(PORT, () => console.log('AGENT Backend Live on', PORT, 'Env:', ENV, 'Store:', SHORTCODE, 'Till:', TILL));
