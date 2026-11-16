@@ -1,4 +1,4 @@
-// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN - PRODUCTION 9528434
+// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN - PRODUCTION 9528434 - TRIM FIX
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -9,21 +9,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- Config from Render Environment - NO KEYS IN CODE ---
-const CONSUMER_KEY = process.env.DARAJA_CONSUMER_KEY;
-const CONSUMER_SECRET = process.env.DARAJA_CONSUMER_SECRET;
-const PASSKEY = process.env.DARAJA_PASSKEY;
-// STORE NUMBER from Production App - 9528434 - Used for BOTH BusinessShortCode + PartyB
-const SHORTCODE = process.env.DARAJA_SHORTCODE || '9528434';
-const TILL = process.env.DARAJA_TILL || '9528434';
-const ENV = (process.env.DARAJA_ENV || 'production').toLowerCase();
-const CALLBACK_URL = process.env.CALLBACK_URL || 'https://agent-backend-nio1.onrender.com/api/callback';
-const ADMIN_PIN = process.env.ADMIN_PIN || '9989#ooko';
+// --- Config - .trim() removes hidden \n that caused Invalid BusinessShortCode ---
+const CONSUMER_KEY = (process.env.DARAJA_CONSUMER_KEY || '').trim();
+const CONSUMER_SECRET = (process.env.DARAJA_CONSUMER_SECRET || '').trim();
+const PASSKEY = (process.env.DARAJA_PASSKEY || '').trim();
+const SHORTCODE = (process.env.DARAJA_SHORTCODE || '9528434').trim();
+const TILL = (process.env.DARAJA_TILL || '9528434').trim();
+const ENV = (process.env.DARAJA_ENV || 'production').trim().toLowerCase();
+const CALLBACK_URL = (process.env.CALLBACK_URL || 'https://agent-backend-nio1.onrender.com/api/callback').trim();
+const ADMIN_PIN = (process.env.ADMIN_PIN || '9989#ooko').trim();
 
 // --- Game State ---
 let game = { status: 'closed', totalCollected: 0, players: [], winners: [] };
 
-// --- Helper: Clean phone to 254... - Accepts 07, 01, 2547, 2541, +254 ---
+// --- Helper: Clean phone to 254... ---
 function cleanPhone(input) {
   let phone = String(input || '').replace(/\s/g, '').replace(/^\+/, '');
   if (/^0/.test(phone)) phone = '254' + phone.slice(1);
@@ -39,7 +38,7 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, game: game.status, env: ENV, shortcode: SHORTCODE, till: TILL, hasKey: !!CONSUMER_KEY, hasSecret: !!CONSUMER_SECRET, hasPasskey: !!PASSKEY, totalCollected: game.totalCollected });
 });
 
-// --- Game Status for Player page ---
+// --- Game Status ---
 app.get('/api/game-state', (req, res) => {
   res.json({ status: game.status, sessionId: 'AGENT-' + new Date().toISOString().slice(0, 10), totalCollected: game.totalCollected, totalPlayers: game.players.filter(p => p.paid).length });
 });
@@ -119,7 +118,7 @@ app.post('/api/pay', async (req, res) => {
   }
 });
 
-// --- Callback from Safaricom ---
+// --- Callback ---
 app.post('/api/callback', (req, res) => {
   try {
     console.log('CALLBACK:', JSON.stringify(req.body));
