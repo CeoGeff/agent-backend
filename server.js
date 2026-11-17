@@ -1,4 +1,4 @@
-// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN - PRODUCTION 9528434 - TRIM FIX
+// AGENT Spot The Fake - Backend - Real Daraja STK Push - CLEAN - PRODUCTION
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -9,15 +9,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- Config - .trim() removes hidden whitespace that causes Safaricom API errors ---
+// --- Config - All names use DARAJA_ prefix ---
 const CONSUMER_KEY = (process.env.DARAJA_CONSUMER_KEY || '').trim();
 const CONSUMER_SECRET = (process.env.DARAJA_CONSUMER_SECRET || '').trim();
-const PASSKEY = (process.env.PASSKEY || '').trim();
+const PASSKEY = (process.env.DARAJA_PASSKEY || '').trim();
 const SHORTCODE = (process.env.DARAJA_SHORTCODE || '9528434').trim();
 const TILL = (process.env.DARAJA_TILL || '3056305').trim();
 const ENV = (process.env.DARAJA_ENV || 'production').trim().toLowerCase();
 const CALLBACK_URL = (process.env.CALLBACK_URL || 'https://agent-backend-niol.onrender.com/api/callback').trim();
-const ADMIN_PIN = (process.env.ADMIN_PIN || '9989#ooko').trim();
+const ADMIN_PIN = (process.env.ADMIN_PIN || '').trim();
 
 // --- Game State ---
 let game = { status: 'closed', totalCollected: 0, players: [], winners: [] };
@@ -35,55 +35,53 @@ function isValidPhone(phone) {
 
 // --- Health Check ---
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    ok: true, 
-    game: game.status, 
-    env: ENV, 
-    shortcode: SHORTCODE, 
-    till: TILL, 
-    hasKey: !!CONSUMER_KEY, 
-    hasSecret: !!CONSUMER_SECRET, 
-    hasPasskey: !!PASSKEY, 
-    totalCollected: game.totalCollected 
+  res.json({
+    ok: true,
+    game: game.status,
+    env: ENV,
+    shortcode: SHORTCODE,
+    till: TILL,
+    hasKey: !!CONSUMER_KEY,
+    hasSecret: !!CONSUMER_SECRET,
+    hasPasskey: !!PASSKEY,
+    hasAdminPin: !!ADMIN_PIN,
+    totalCollected: game.totalCollected
   });
 });
 
 // --- Game Status ---
 app.get('/api/game-state', (req, res) => {
-  res.json({ 
-    status: game.status, 
-    sessionId: 'AGENT-' + new Date().toISOString().slice(0, 10), 
-    totalCollected: game.totalCollected, 
-    totalPlayers: game.players.filter(p => p.paid).length 
+  res.json({
+    status: game.status,
+    sessionId: 'AGENT-' + new Date().toISOString().slice(0, 10),
+    totalCollected: game.totalCollected,
+    totalPlayers: game.players.filter(p => p.paid).length
   });
 });
-
 app.get('/api/game', (req, res) => {
   res.json(game);
 });
 
 // --- Admin Open / Close / Reset ---
 app.post('/api/admin/open', (req, res) => {
-  if (String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
+  if (!ADMIN_PIN || String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   game.status = 'open';
   res.json({ ok: true, game });
 });
-
 app.post('/api/admin/close', (req, res) => {
-  if (String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
+  if (!ADMIN_PIN || String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   game.status = 'closed';
   res.json({ ok: true, game });
 });
-
 app.post('/api/admin/reset', (req, res) => {
-  if (String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
+  if (!ADMIN_PIN || String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   game = { status: game.status, totalCollected: 0, players: [], winners: [] };
   res.json({ ok: true, game });
 });
 
 // --- Admin Stats ---
 app.get('/api/admin/stats', (req, res) => {
-  if (String(req.query.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
+  if (!ADMIN_PIN || String(req.query.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   res.json({ ok: true, game: game.status, totalCollected: game.totalCollected, paidPlayers: game.players.filter(p => p.paid), allPlayers: game.players });
 });
 
@@ -99,8 +97,7 @@ async function getToken() {
 app.post('/api/pay', async (req, res) => {
   try {
     let { name, phone } = req.body;
-    const amount = 20; // Entry fee KSh 20
-    
+    const amount = 20;
     if (game.status !== 'open') return res.status(400).json({ ok: false, error: 'Game is CLOSED. Ask Admin to OPEN.' });
     if (!name || !phone) return res.status(400).json({ ok: false, error: 'Name and Phone are required' });
     if (!CONSUMER_KEY || !CONSUMER_SECRET || !PASSKEY) return res.status(500).json({ ok: false, error: 'Daraja keys missing in Render Environment' });
@@ -109,8 +106,6 @@ app.post('/api/pay', async (req, res) => {
     if (!isValidPhone(phone)) return res.status(400).json({ ok: false, error: 'Use a valid Safaricom number like 0798892857 or 0113758976' });
 
     const { token, base } = await getToken();
-    
-    // EAT Timezone adjustment (+3 hours)
     const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
     const timestamp = now.toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
     const password = Buffer.from(`${SHORTCODE}${PASSKEY}${timestamp}`).toString('base64');
@@ -130,23 +125,8 @@ app.post('/api/pay', async (req, res) => {
     };
 
     const r = await axios.post(`${base}/mpesa/stkpush/v1/processrequest`, payload, { headers: { Authorization: `Bearer ${token}` } });
-    
-    game.players.push({ 
-      name, 
-      phone, 
-      amount, 
-      checkoutId: r.data.CheckoutRequestID, 
-      paid: false, 
-      time: new Date().toISOString() 
-    });
-
-    res.json({ 
-      ok: true, 
-      checkoutId: r.data.CheckoutRequestID, 
-      CheckoutRequestID: r.data.CheckoutRequestID, 
-      message: 'STK sent. Enter PIN on your phone.' 
-    });
-
+    game.players.push({ name, phone, amount, checkoutId: r.data.CheckoutRequestID, paid: false, time: new Date().toISOString() });
+    res.json({ ok: true, checkoutId: r.data.CheckoutRequestID, CheckoutRequestID: r.data.CheckoutRequestID, message: 'STK sent. Enter PIN on your phone.' });
   } catch (e) {
     console.log('PAY ERROR:', e.response?.data || e.message);
     const d = e.response?.data;
@@ -160,24 +140,20 @@ app.post('/api/callback', (req, res) => {
     console.log('CALLBACK:', JSON.stringify(req.body));
     const stk = req.body?.Body?.stkCallback;
     if (!stk) return res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
-
     const checkoutId = stk.CheckoutRequestID;
     const player = game.players.find(p => p.checkoutId === checkoutId);
-
     if (player && stk.ResultCode === 0 && !player.paid) {
       player.paid = true;
       game.totalCollected += player.amount;
-      console.log('PAID SUCCESS:', player.name, player.amount);
+      console.log('PAID:', player.name, player.amount);
     } else {
       console.log('CALLBACK NOT PAID:', stk.ResultCode, stk.ResultDesc);
     }
-  } catch (e) { 
-    console.log('CALLBACK ERROR', e.message); 
-  }
+  } catch (e) { console.log('CALLBACK ERROR', e.message); }
   res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
 });
 
-// --- Check Payment Status ---
+// --- Check Payment ---
 app.get('/api/check-payment', (req, res) => {
   const phone = cleanPhone(req.query.phone);
   const player = [...game.players].reverse().find(p => p.phone === phone);
@@ -187,7 +163,7 @@ app.get('/api/check-payment', (req, res) => {
 
 // --- Winners ---
 app.post('/api/winners', (req, res) => {
-  if (String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
+  if (!ADMIN_PIN || String(req.body.pin) !== String(ADMIN_PIN)) return res.status(401).json({ ok: false, error: 'Wrong PIN' });
   game.winners = req.body.winners || [];
   res.json({ ok: true });
 });
@@ -201,4 +177,4 @@ app.use('/api', (req, res) => {
 app.use(express.static(path.join(__dirname)));
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log('AGENT Backend Live on PORT:', PORT, '| Env:', ENV, '| Store:', SHORTCODE, '| Till:', TILL));
+app.listen(PORT, () => console.log('AGENT Backend Live on', PORT, 'Env:', ENV, 'Store:', SHORTCODE, 'Till:', TILL));
