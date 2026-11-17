@@ -16,7 +16,7 @@ const PASSKEY = (process.env.DARAJA_PASSKEY || '').trim();
 const SHORTCODE = (process.env.DARAJA_SHORTCODE || '9528434').trim();
 const TILL = (process.env.DARAJA_TILL || '9528434').trim();
 const ENV = (process.env.DARAJA_ENV || 'production').trim().toLowerCase();
-const CALLBACK_URL = (process.env.CALLBACK_URL || 'https://agent-backend-nio1.onrender.com/api/callback').trim();
+const CALLBACK_URL = (process.env.CALLBACK_URL || 'https://agent-backend-niol.onrender.com/api/callback').trim();
 const ADMIN_PIN = (process.env.ADMIN_PIN || '9989#ooko').trim();
 
 // --- Game State ---
