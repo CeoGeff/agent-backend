@@ -10,9 +10,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --- Config - .trim() removes hidden \n that caused Invalid BusinessShortCode ---
-const CONSUMER_KEY = (process.env.DARAJA_CONSUMER_KEY || 'K3DlyhIZJ6wbk2mlgMzkfJpaVCGOAANxmY3tN6M9Z2GhGjCo').trim();
-const CONSUMER_SECRET = (process.env.DARAJA_CONSUMER_SECRET || '2y9Dv9KO2ouoHLf31meZV0DL6ZZCo6GAvbAmp1UmTEZIy18lTFgg56VaGl0UATck').trim();
-const PASSKEY = (process.env.DARAJA_PASSKEY || '6b870b3bb7ccf55f859cfc85ef832f0ecad88a0b957ddd08857b6e5cf1bf2300').trim();
+const CONSUMER_KEY = (process.env.K3DlyhIZJ6wbk2mlgMzkfJpaVCGOAANxmY3tN6M9Z2GhGjCo || '').trim();
+const CONSUMER_SECRET = (process.env.2y9Dv9KO2ouoHLf31meZV0DL6ZZCo6GAvbAmp1UmTEZIy18lTFgg56VaGl0UATck || '').trim();
+const PASSKEY = (process.env.6b870b3bb7ccf55f859cfc85ef832f0ecad88a0b957ddd08857b6e5cf1bf2300 || '').trim();
 const SHORTCODE = (process.env.DARAJA_SHORTCODE || '9528434').trim();
 const TILL = (process.env.DARAJA_TILL || '3056305').trim();
 const ENV = (process.env.DARAJA_ENV || 'production').trim().toLowerCase();
